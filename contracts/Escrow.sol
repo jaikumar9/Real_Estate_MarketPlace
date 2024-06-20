@@ -62,12 +62,13 @@ contract Escrow {
         purchasePrice[_nftID] = _purchasePrice;
         escrowAmount[_nftID] = _escrowAmount;
         buyer[_nftID] = _buyer;
+
     }
 
     // Put Under Contract (only buyer - payable escrow)
     function depositEarnest(uint256 _nftID) public payable onlyBuyer(_nftID) {
         require(msg.value >= escrowAmount[_nftID]);
-    }
+    }  
 
     // Update Inspection Status (only inspector)
     function updateInspectionStatus(uint256 _nftID, bool _passed)
@@ -97,9 +98,7 @@ contract Escrow {
 
         isListed[_nftID] = false;
 
-        (bool success, ) = payable(seller).call{value: address(this).balance}(
-            ""
-        );
+        (bool success, ) = payable(seller).call{value: address(this).balance}("");
         require(success);
 
         IERC721(nftAddress).transferFrom(address(this), buyer[_nftID], _nftID);
