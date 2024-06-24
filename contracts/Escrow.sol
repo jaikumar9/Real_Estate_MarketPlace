@@ -36,6 +36,8 @@ contract Escrow {
     mapping(uint256 => address) public buyer;
     mapping(uint256 => bool) public inspectionPassed;
     mapping(uint256 => mapping(address => bool)) public approval;
+    mapping(uint256 => bool) public saleFinalized;
+
 
     constructor(
         address _nftAddress,
@@ -97,16 +99,19 @@ contract Escrow {
         require(address(this).balance >= purchasePrice[_nftID]);
 
         isListed[_nftID] = false;
-
+       
         (bool success, ) = payable(seller).call{value: address(this).balance}("");
         require(success);
 
         IERC721(nftAddress).transferFrom(address(this), buyer[_nftID], _nftID);
+          saleFinalized[_nftID] = true;  // Mark the sale as finalized
+
     }
 
     // Cancel Sale (handle earnest deposit)
     // -> if inspection status is not approved, then refund, otherwise send to seller
     function cancelSale(uint256 _nftID) public {
+         require(!saleFinalized[_nftID], "Sale has already been finalized");
         if (inspectionPassed[_nftID] == false) {
             payable(buyer[_nftID]).transfer(address(this).balance);
         } else {
