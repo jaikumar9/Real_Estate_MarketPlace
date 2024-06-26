@@ -11,28 +11,34 @@ import RealEstate from "./abis/RealEstate.json";
 import Escrow from "./abis/Escrow.json";
 
 // Config
-import config from './config.json';
+import config from "./config.json";
 
 function App() {
-  const [provider, setProvider] = useState(null)
+  const [provider, setProvider] = useState(null);
 
   const [account, setAccount] = useState(null);
 
   const loadBlockchainData = async () => {
     const provider = new ethers.providers.Web3Provider(window.ethereum);
     setProvider(provider);
-    await provider.getNetwork();
+    const network = await provider.getNetwork();
     console.log(provider);
+    console.log(network);
 
- window.ethereum.on('accountsChanged', async()=>{
-  const accounts = await window.ethereum.request({method: "eth_requestAccounts"});
-  const account = ethers.utils.getAddress(accounts[0]);
-  setAccount(account);
-  console.log(account);
- })
+    const realAddress = config[network.chainId].realEstate.address;
+    const escrowAddress = config[network.chainId].escrow.address;
 
-  }
+    console.log(realAddress, escrowAddress);
 
+    window.ethereum.on("accountsChanged", async () => {
+      const accounts = await window.ethereum.request({
+        method: "eth_requestAccounts",
+      });
+      const account = ethers.utils.getAddress(accounts[0]);
+      setAccount(account);
+      console.log(account);
+    });
+  };
 
   useEffect(() => {
     loadBlockchainData();
@@ -41,30 +47,53 @@ function App() {
   return (
     <div>
       <Navigation account={account} setAccount={setAccount} />
-      <Search/>
+      <Search />
       <div className="cards__section">
-       
-       <h3>Home for YOU</h3>
-        <hr/>
-        
+        <h3>Home for YOU</h3>
+        <hr />
+
         <div className="cards">
           <div className="card">
             <div className="card__image">
-              
+              <img src="" alt="Home Property Image" />
+            </div>
+            <div className="card__info">
+              <h4>1 ETH</h4>
+              <p>
+                <strong>1</strong> bds |<strong>2</strong> ba |
+                <strong>3</strong> sqft|
+              </p>
+              <p>1234 DCM jaipur</p>
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="card__image">
+              <img src="" alt="Home Property Image" />
+            </div>
+            <div className="card__info">
+              <h4>1 ETH</h4>
+              <p>
+                <strong>1</strong> bds |<strong>2</strong> ba |
+                <strong>3</strong> sqft|
+              </p>
+              <p>1234 DCM jaipur</p>
             </div>
           </div>
           <div className="card">
             <div className="card__image">
-              
+              <img src="" alt="Home Property Image" />
             </div>
-          </div>
-          <div className="card">
-            <div className="card__image">
-              
+            <div className="card__info">
+              <h4>1 ETH</h4>
+              <p>
+                <strong>1</strong> bds |<strong>2</strong> ba |
+                <strong>3</strong> sqft|
+              </p>
+              <p>1234 DCM jaipur</p>
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );
