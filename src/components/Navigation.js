@@ -6,7 +6,7 @@ const Navigation = ({ account, setAccount }) => {
   const connectHandler = async () => {
     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
     setAccount(accounts[0]);
-    console.log(accounts[0]);
+    // console.log(accounts[0]);x
   }
 
   return (
