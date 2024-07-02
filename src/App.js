@@ -27,8 +27,8 @@ function App() {
     const provider = new ethers.providers.Web3Provider(window.ethereum);
     setProvider(provider);
     const network = await provider.getNetwork();
-    // console.log(provider);
-    // console.log(network);
+    console.log(provider);
+    console.log(network);
 
     const realAddress = config[network.chainId].realEstate.address;
     const escrowAddress = config[network.chainId].escrow.address;
@@ -41,7 +41,7 @@ function App() {
       provider
     );
     const totalSupply = await realEstate.totalSupply();
-    // console.log(totalSupply.toNumber());
+    console.log(totalSupply.toNumber());
     const homes = [];
 
     for (var i = 1; i <= totalSupply; i++) {
@@ -70,7 +70,7 @@ function App() {
 
   useEffect(() => {
     loadBlockchainData();
-  }, []);
+  }, [account]);
 
   const togglePop = (home) => {
     setHome(home)
