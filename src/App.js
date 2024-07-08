@@ -5,6 +5,7 @@ import { ethers } from "ethers";
 import Navigation from "./components/Navigation";
 import Search from "./components/Search";
 import Home from "./components/Home";
+import Footer from "./components/footer";
 
 // ABIs
 import RealEstate from "./abis/RealEstate.json";
@@ -46,13 +47,14 @@ function App() {
 
     for (var i = 1; i <= totalSupply; i++) {
       const uri = await realEstate.tokenURI(i); // Getting Uri from the Contract
+      // console.log(uri)
       const response = await fetch(uri); // Featch the URi to Get res
       const metadata = await response.json(); // From res we get the json object
       homes.push(metadata); // then push the json object to the homes[] array.
     }
 
     setHomes(homes);
-    console.log(homes);
+    // console.log(homes); 
 
     const escrow = new ethers.Contract(escrowAddress, Escrow.abi, provider);
     setEscrow(escrow);
@@ -116,6 +118,7 @@ function App() {
           togglePop={togglePop}
         />
       )}
+      <Footer/>
     </div>
   );
 }

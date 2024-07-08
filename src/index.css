@@ -1,3 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&display=swap');
 
 * {
@@ -353,4 +358,36 @@ header {
   .nav__links {
     display: none;
   }
+}
+/* Tailwind CSS example */
+.bg-light-grey {
+  background-color: #f0f0f0;
+}
+
+.text-orange {
+  color: #ff9800;
+}
+
+.text-orange-dark {
+  color: #e68a00;
+}
+
+.text-orange-darker {
+  color: #cc7a00;
+}
+
+/* To make sure the body takes up at least 100% of the viewport height */
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+main {
+  flex: 1;
 }
