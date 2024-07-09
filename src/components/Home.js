@@ -1,124 +1,130 @@
-import { ethers } from 'ethers';
 import { useEffect, useState } from 'react';
-
 import close from '../assets/close.svg';
+import WalletConnectedOrNot from './WalletConnectedOrNot';
+import Swal from 'sweetalert2'
+
+// or via CommonJS
+// const Swal = require('sweetalert2')
 
 const Home = ({ home, provider, account, escrow, togglePop }) => {
-    const [hasBought, setHasBought] = useState(false)
-    const [hasLended, setHasLended] = useState(false)
-    const [hasInspected, setHasInspected] = useState(false)
-    const [hasSold, setHasSold] = useState(false)
+    const [hasBought, setHasBought] = useState(false);
+    const [hasLended, setHasLended] = useState(false);
+    const [hasInspected, setHasInspected] = useState(false);
+    const [hasSold, setHasSold] = useState(false);
 
-    const [buyer, setBuyer] = useState(null)
-    const [lender, setLender] = useState(null)
-    const [inspector, setInspector] = useState(null)
-    const [seller, setSeller] = useState(null)
+    const [buyer, setBuyer] = useState(null);
+    const [lender, setLender] = useState(null);
+    const [inspector, setInspector] = useState(null);
+    const [seller, setSeller] = useState(null);
 
-    const [owner, setOwner] = useState(null)
+    const [owner, setOwner] = useState(null);
+    const [isWalletConnected, setIsWalletConnected] = useState(false);
+    const [showPopup, setShowPopup] = useState(false);
 
     const fetchDetails = async () => {
-        // -- Buyer
+        const buyer = await escrow.buyer(home.id);
+        setBuyer(buyer);
 
-        const buyer = await escrow.buyer(home.id)
-        setBuyer(buyer)
+        const hasBought = await escrow.approval(home.id, buyer);
+        setHasBought(hasBought);
 
-        const hasBought = await escrow.approval(home.id, buyer)
-        setHasBought(hasBought)
+        const seller = await escrow.seller();
+        setSeller(seller);
 
-        // -- Seller
+        const hasSold = await escrow.approval(home.id, seller);
+        setHasSold(hasSold);
 
-        const seller = await escrow.seller()
-        setSeller(seller)
+        const lender = await escrow.lender();
+        setLender(lender);
 
-        const hasSold = await escrow.approval(home.id, seller)
-        setHasSold(hasSold)
+        const hasLended = await escrow.approval(home.id, lender);
+        setHasLended(hasLended);
 
-        // -- Lender
+        const inspector = await escrow.inspector();
+        setInspector(inspector);
 
-        const lender = await escrow.lender()
-        setLender(lender)
-
-        const hasLended = await escrow.approval(home.id, lender)
-        setHasLended(hasLended)
-
-        // -- Inspector
-
-        const inspector = await escrow.inspector()
-        setInspector(inspector)
-
-        const hasInspected = await escrow.inspectionPassed(home.id)
-        setHasInspected(hasInspected)
-    }
+        const hasInspected = await escrow.inspectionPassed(home.id);
+        setHasInspected(hasInspected);
+    };
 
     const fetchOwner = async () => {
-        if (await escrow.isListed(home.id)) return
+        if (await escrow.isListed(home.id)) return;
 
-        const owner = await escrow.buyer(home.id)
-        setOwner(owner)
-    }
+        const owner = await escrow.buyer(home.id);
+        setOwner(owner);
+    };
 
     const buyHandler = async () => {
-        const escrowAmount = await escrow.escrowAmount(home.id)
-        const signer = await provider.getSigner()
+   
+            const escrowAmount = await escrow.escrowAmount(home.id);
+            const signer = await provider.getSigner();
 
-        // Buyer deposit earnest
-        let transaction = await escrow.connect(signer).depositEarnest(home.id, { value: escrowAmount })
-        await transaction.wait()
+            let transaction = await escrow.connect(signer).depositEarnest(home.id, { value: escrowAmount });
+            await transaction.wait();
 
-        // Buyer approves...
-        transaction = await escrow.connect(signer).approveSale(home.id)
-        await transaction.wait()
+            transaction = await escrow.connect(signer).approveSale(home.id);
+            await transaction.wait();
 
-        setHasBought(true)
-    }
+            setHasBought(true);
+       
+    };
 
     const inspectHandler = async () => {
-        const signer = await provider.getSigner()
+        if (account) {
+            const signer = await provider.getSigner();
 
-        // Inspector updates status
-        const transaction = await escrow.connect(signer).updateInspectionStatus(home.id, true)
-        await transaction.wait()
+            const transaction = await escrow.connect(signer).updateInspectionStatus(home.id, true);
+            await transaction.wait();
 
-        setHasInspected(true)
-    }
+            setHasInspected(true);
+        } else {
+            setShowPopup(true);
+        }
+    };
 
     const lendHandler = async () => {
-        const signer = await provider.getSigner()
+        if (isWalletConnected) {
+            const signer = await provider.getSigner();
 
-        // Lender approves...
-        const transaction = await escrow.connect(signer).approveSale(home.id)
-        await transaction.wait()
+            const transaction = await escrow.connect(signer).approveSale(home.id);
+            await transaction.wait();
 
-        // Lender sends funds to contract...
-        const lendAmount = (await escrow.purchasePrice(home.id) - await escrow.escrowAmount(home.id))
-        await signer.sendTransaction({ to: escrow.address, value: lendAmount.toString(), gasLimit: 60000 })
+            const lendAmount = (await escrow.purchasePrice(home.id) - await escrow.escrowAmount(home.id));
+            await signer.sendTransaction({ to: escrow.address, value: lendAmount.toString(), gasLimit: 60000 });
 
-        setHasLended(true)
-    }
+            setHasLended(true);
+        } else {
+            setShowPopup(true);
+        }
+    };
 
     const sellHandler = async () => {
-        const signer = await provider.getSigner()
+        if (isWalletConnected) {
+            const signer = await provider.getSigner();
 
-        // Seller approves...
-        let transaction = await escrow.connect(signer).approveSale(home.id)
-        await transaction.wait()
+            let transaction = await escrow.connect(signer).approveSale(home.id);
+            await transaction.wait();
 
-        // Seller finalize...
-        transaction = await escrow.connect(signer).finalizeSale(home.id)
-        await transaction.wait()
+            transaction = await escrow.connect(signer).finalizeSale(home.id);
+            await transaction.wait();
 
-        setHasSold(true)
-    }
+            setHasSold(true);
+        } else {
+            setShowPopup(true);
+        }
+    };
 
     useEffect(() => {
-        fetchDetails()
-        fetchOwner()
-    }, [hasSold])
+        fetchDetails();
+        fetchOwner();
+        setIsWalletConnected(provider && account);
+    }, [hasSold, account, provider]);
 
     return (
         <div className="home">
             <div className='home__details'>
                 <div className="home__image">
+                    
                     <img src={home.image} alt="Home" />
                 </div>
                 <div className="home__overview">
@@ -153,8 +159,9 @@ const Home = ({ home, provider, account, escrow, togglePop }) => {
                             ) : (
                                 <button className='home__buy' onClick={buyHandler} disabled={hasBought}>
                                     Buy
-                                </button>
+                                </button> 
                             )}
+                        
 
                             <button className='home__contact'>
                                 Contact agent
@@ -181,12 +188,13 @@ const Home = ({ home, provider, account, escrow, togglePop }) => {
                     </ul>
                 </div>
 
-
                 <button onClick={togglePop} className="home__close">
                     <img src={close} alt="Close" />
                 </button>
             </div>
-        </div >
+
+            
+        </div>
     );
 }
 

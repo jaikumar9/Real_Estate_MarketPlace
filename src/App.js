@@ -26,10 +26,10 @@ function App() {
 
   const loadBlockchainData = async () => {
     const provider = new ethers.providers.Web3Provider(window.ethereum);
-    setProvider(provider);
+    // setProvider(provider);
     const network = await provider.getNetwork();
-    console.log(provider);
-    console.log(network);
+    // console.log(provider);
+    // console.log(network);
 
     const realAddress = config[network.chainId].realEstate.address;
     const escrowAddress = config[network.chainId].escrow.address;
@@ -46,12 +46,23 @@ function App() {
     const homes = [];
 
     for (var i = 1; i <= totalSupply; i++) {
-      const uri = await realEstate.tokenURI(i); // Getting Uri from the Contract
-      // console.log(uri)
-      const response = await fetch(uri); // Featch the URi to Get res
-      const metadata = await response.json(); // From res we get the json object
-      homes.push(metadata); // then push the json object to the homes[] array.
+      try {
+        const uri = await realEstate.tokenURI(i); // Getting URI from the Contract
+        // console.log(uri);
+        
+        const response = await fetch(uri); // Fetch the URI to get response
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch URI: ${uri}, status: ${response.status}`);
+        }
+        
+        const metadata = await response.json(); // Get the JSON object from response
+        homes.push(metadata); // Push the JSON object to the homes array
+      } catch (error) {
+        console.error(`Error fetching metadata for token ${i}:`, error);
+      }
     }
+    
 
     setHomes(homes);
     // console.log(homes); 
@@ -110,7 +121,7 @@ function App() {
       </div>
 
       {toggle && (
-        <Home
+        <Home 
           home={home}
           provider={provider}
           account={account}
@@ -118,6 +129,10 @@ function App() {
           togglePop={togglePop}
         />
       )}
+      <hr/>
+      <hr/>
+      <hr/>
+      <hr/>
       <Footer/>
     </div>
   );
